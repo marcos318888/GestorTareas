@@ -3,18 +3,28 @@
 namespace App\Entity;
 
 use App\Repository\TareaRepository;
+use App\Validator as AppAssert;
+use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: TareaRepository::class)]
+/**
+ * @AppAssert\TareaUnica
+ * @ORM\Entity(repositoryClass=TareaRepository::class) 
+ */
 class Tarea
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    /**
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="integer")
+     */
+    private $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $descripcion = null;
+    /**
+     * @Assert\NotBlank(message="El campo descripción no puede estar vacío")
+     * @ORM\Column(type="string", length=255)
+     */
+    private $descripcion;
 
     public function getId(): ?int
     {
@@ -26,7 +36,7 @@ class Tarea
         return $this->descripcion;
     }
 
-    public function setDescripcion(string $descripcion): static
+    public function setDescripcion(string $descripcion): self
     {
         $this->descripcion = $descripcion;
 
