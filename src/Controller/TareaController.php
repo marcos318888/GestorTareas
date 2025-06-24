@@ -9,23 +9,19 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class TareaController extends AbstractController
 {
-
-    /**
-     * @Route("/tarea", name="tarea")
-     */
+    #[Route('/tarea', name: 'app_tarea')]
     public function index(): Response
     {
         return $this->render('tarea/index.html.twig', [
             'controller_name' => 'TareaController',
-            ]);
+        ]);
     }
-    /**
-     * @Route("/", name="app_listado_tarea")
-     */
+
+    #[Route('/', name: 'app_listado_tarea')]
     public function listado(TareaRepository $tareaRepository): Response
     {
         $tareas = $tareaRepository->findAll();
@@ -35,9 +31,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/crear-tarea", name="app_crear_tarea", methods={"GET", "POST"})
-     */
+    #[Route('/crear-tarea', name: 'app_crear_tarea', methods: ['GET', 'POST'])]
     public function crear(Request $request, EntityManagerInterface $em): Response
     {
         $tarea = new Tarea();
@@ -46,7 +40,6 @@ class TareaController extends AbstractController
         if ($request->isMethod('POST')) {
             if (!empty($descripcion)) {
                 $tarea->setDescripcion($descripcion);
-
                 $em->persist($tarea);
                 $em->flush();
 
@@ -62,9 +55,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/editar-tarea/{id}", name="app_editar_tarea", requirements={"id"="\d+"}, methods={"GET", "POST"})
-     */
+    #[Route('/editar-tarea/{id}', name: 'app_editar_tarea', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function editar(
         int $id,
         TareaRepository $tareaRepository,
@@ -82,7 +73,6 @@ class TareaController extends AbstractController
         if ($request->isMethod('POST')) {
             if (!empty($descripcion)) {
                 $tarea->setDescripcion($descripcion);
-
                 $em->flush();
 
                 $this->addFlash('success', 'Tarea editada correctamente!');
@@ -97,9 +87,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/eliminar-tarea/{id}", name="app_eliminar_tarea", requirements={"id"="\d+"}, methods={"POST"})
-     */
+    #[Route('/eliminar-tarea/{id}', name: 'app_eliminar_tarea', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function eliminar(Tarea $tarea, EntityManagerInterface $em): Response
     {
         $em->remove($tarea);
@@ -109,9 +97,7 @@ class TareaController extends AbstractController
         return $this->redirectToRoute('app_listado_tarea');
     }
 
-    /**
-     * @Route("/crear-tarea-servicio", name="app_crear_tarea_servicio", methods={"GET", "POST"})
-     */
+    #[Route('/crear-tarea-servicio', name: 'app_crear_tarea_servicio', methods: ['GET', 'POST'])]
     public function crearServicio(TareaManager $tareaManager, Request $request): Response
     {
         $descripcion = $request->request->get('descripcion');
@@ -137,9 +123,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/editar-tarea-servicio/{id}", name="app_editar_tarea_servicio", requirements={"id"="\d+"}, methods={"GET", "POST"})
-     */
+    #[Route('/editar-tarea-servicio/{id}', name: 'app_editar_tarea_servicio', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     public function editarServicio(TareaManager $tareaManager, Tarea $tarea, Request $request): Response
     {
         $descripcion = $request->request->get('descripcion');
@@ -164,9 +148,7 @@ class TareaController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/eliminar-tarea-servicio/{id}", name="app_eliminar_tarea_servicio", requirements={"id"="\d+"}, methods={"POST"})
-     */
+    #[Route('/eliminar-tarea-servicio/{id}', name: 'app_eliminar_tarea_servicio', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function eliminarServicio(Tarea $tarea, TareaManager $tareaManager): Response
     {
         $tareaManager->eliminar($tarea);
