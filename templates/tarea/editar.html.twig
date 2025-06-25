@@ -1,11 +1,26 @@
+{# templates/tarea/editar.html.twig #}
 {% extends 'base.html.twig' %}
 
 {% block title %}Editar tarea{% endblock %}
 
 {% block body %}
-    <h1>Editar tarea</h1>
-    
-    {% include 'comunes/_mensajes.html.twig' %}
+<h1>Editar tarea #{{ tarea.id }}</h1>
 
-    {% include 'tarea/_formulario.html.twig' with {'accion': path('app_editar_tarea_servicio', {'id': tarea.id}), 'etiqueta_btn_enviar': 'Editar'} %}
+{% include 'comunes/_mensajes.html.twig' %}
+
+<form method="POST" action="{{ path('app_editar_tarea', {id: tarea.id}) }}">
+    <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <input 
+            type="text" 
+            class="form-control" 
+            id="descripcion" 
+            name="descripcion" 
+            value="{{ tarea.descripcion }}" 
+            required
+        >
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    <a href="{{ path('app_listado_tarea') }}" class="btn btn-secondary">Cancelar</a>
+</form>
 {% endblock %}

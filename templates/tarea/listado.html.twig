@@ -3,13 +3,151 @@
 {% block title %}Listado de tareas{% endblock %}
 
 {% block body %}
-<h1>Listado de tareas</h1>
+<style>
+    body {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
 
-<ul>
-  {% for tarea in tareas %}
-    <li>{{ tarea.descripcion }}</li>
-  {% else %}
-    <li>No hay tareas.</li>
-  {% endfor %}
-</ul>
+    header {
+        background: linear-gradient(90deg, #007bff, #6610f2);
+        color: white;
+        padding: 1.5rem 0;
+        text-align: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        margin-bottom: 2rem;
+    }
+
+    header h1 {
+        font-weight: 700;
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+        margin: 0;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+
+    footer {
+        background-color: #343a40;
+        color: #adb5bd;
+        text-align: center;
+        padding: 1rem 0;
+        margin-top: auto;
+        font-size: 0.9rem;
+        box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+    }
+
+    .completed {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    .card {
+        transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+</style>
+
+<header>
+    <h1>📝 Gestor de Tareas</h1>
+</header>
+
+<div class="container mb-5">
+    {% for mensaje in app.flashes('success') %}
+        <div class="alert alert-success">{{ mensaje }}</div>
+    {% endfor %}
+    {% for mensaje in app.flashes('warning') %}
+        <div class="alert alert-warning">{{ mensaje }}</div>
+    {% endfor %}
+
+    {% if tareas is not empty %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for tarea in tareas %}
+                <div class="col">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body d-flex flex-column">
+                          <h5 class="card-title">Tarea #{{ loop.index }}</h5>
+                          <p class="card-text descripcion flex-grow-1" id="desc-{{ tarea.id }}">{{ tarea.descripcion }}</p>
+                          <button class="btn btn-sm btn-outline-success toggle-completado mb-3" data-id="{{ tarea.id }}">
+                              {% if tarea.completada %}
+                                  Marcar como no completada
+                              {% else %}
+                                  Marcar como completada
+                              {% endif %}
+                          </button>
+                        <div class="d-flex align-items-center" style="gap: 10px;">
+                            <a href="{{ path('app_editar_tarea', {id: tarea.id}) }}" class="btn btn-sm btn-outline-primary">
+                                Editar
+                            </a>
+                            <form method="POST" action="{{ path('app_eliminar_tarea', {id: tarea.id}) }}"
+                                  onsubmit="return confirm('¿Estás seguro que deseas eliminar esta tarea?');"
+                                  style="display: inline-block; margin-bottom: 0;">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-3">No hay tareas registradas.</div>
+    {% endif %}
+</div>
+
+<footer>
+    <p>© {{ "now"|date("Y") }} Gestor de Tareas - Desarrollado por Ti 🚀</p>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const botones = document.querySelectorAll('.toggle-completado');
+
+        botones.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.id;
+                const desc = document.getElementById('desc-' + id);
+
+                const nuevaCompletada = !desc.classList.contains('completed');
+
+                fetch(`/tarea/${id}/toggle`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ completada: nuevaCompletada })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (nuevaCompletada) {
+                            desc.classList.add('completed');
+                            btn.textContent = 'Marcar como no completada';
+                            btn.classList.remove('btn-outline-success');
+                            btn.classList.add('btn-outline-secondary');
+                        } else {
+                            desc.classList.remove('completed');
+                            btn.textContent = 'Marcar como completada';
+                            btn.classList.remove('btn-outline-secondary');
+                            btn.classList.add('btn-outline-success');
+                        }
+                    } else {
+                        alert('Error al guardar el estado: ' + data.message);
+                    }
+                })
+                .catch(() => {
+                    alert('Error en la comunicación con el servidor');
+                });
+            });
+        });
+    });
+</script>
 {% endblock %}

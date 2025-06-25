@@ -7,6 +7,7 @@ use App\Repository\TareaRepository;
 use App\Service\TareaManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -39,11 +40,11 @@ class TareaController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $descripcion = $request->request->get('descripcion', '');
-
             $tarea->setDescripcion($descripcion);
+
             $errores = $tareaManager->validar($tarea);
 
-            if (empty($errores)) {
+            if (count($errores) === 0) {
                 $tareaManager->crear($tarea);
                 $this->addFlash('success', 'Tarea creada correctamente!');
                 return $this->redirectToRoute('app_listado_tarea');
@@ -72,10 +73,12 @@ class TareaController extends AbstractController
             $descripcion = $request->request->get('descripcion', '');
 
             $tarea->setDescripcion($descripcion);
+
             $errores = $tareaManager->validar($tarea);
 
-            if (empty($errores)) {
-                $tareaManager->crear($tarea);
+            if (count($errores) === 0) {
+                // Guardamos los cambios con editar() que solo hace flush
+                $tareaManager->editar($tarea);
                 $this->addFlash('success', 'Tarea editada correctamente!');
                 return $this->redirectToRoute('app_listado_tarea');
             }
@@ -90,6 +93,7 @@ class TareaController extends AbstractController
         ]);
     }
 
+
     #[Route('/eliminar-tarea/{id}', name: 'app_eliminar_tarea', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function eliminar(Tarea $tarea, TareaManager $tareaManager): Response
     {
@@ -97,5 +101,37 @@ class TareaController extends AbstractController
 
         $this->addFlash('success', 'Tarea eliminada correctamente!');
         return $this->redirectToRoute('app_listado_tarea');
+    }
+
+    #[Route('/tarea/{id}/toggle', name: 'app_toggle_tarea', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function toggleCompletada(int $id, Request $request): JsonResponse
+    {
+        $tarea = $this->tareaRepository->find($id);
+
+        if (!$tarea) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Tarea no encontrada.',
+            ], 404);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['completada'])) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Falta el parámetro "completada".',
+            ], 400);
+        }
+
+        $tarea->setCompletada((bool)$data['completada']);
+
+        $this->em->persist($tarea);
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'completada' => $tarea->isCompletada(),
+        ]);
     }
 }

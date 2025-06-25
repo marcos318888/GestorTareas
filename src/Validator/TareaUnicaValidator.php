@@ -5,28 +5,34 @@ namespace App\Validator;
 use App\Repository\TareaRepository;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Component\Validator\Exception\UnexpectedTypeException;
+use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 class TareaUnicaValidator extends ConstraintValidator
 {
-
-    private $tareaRepository;
+    private TareaRepository $tareaRepository;
 
     public function __construct(TareaRepository $tareaRepository)
     {
         $this->tareaRepository = $tareaRepository;
     }
 
-    public function validate($tarea, Constraint $constraint)
+    public function validate($value, Constraint $constraint): void
     {
-        $descripcion = $tarea->getDescripcion();
-        if (null === $descripcion || '' === $descripcion) {
-            return;
+        if (!$constraint instanceof TareaUnica) {
+            throw new UnexpectedTypeException($constraint, TareaUnica::class);
         }
 
-        $tareaCondescripcionIgual = $this->tareaRepository->buscarTareaPorDescripcion($descripcion);
-        if (null !== $tareaCondescripcionIgual && $tarea->getId() !== $tareaCondescripcionIgual->getId()) {
+        if (null === $value || '' === $value) {
+            return; // No validamos valores vacíos
+        }
+
+        // Verifica si ya existe una tarea con la misma descripción
+        $tareaExistente = $this->tareaRepository->buscarTareaPorDescripcion($value);
+
+        if ($tareaExistente !== null) {
             $this->context->buildViolation($constraint->message)
-                ->setParameter('{{ value }}', $descripcion)
+                ->setParameter('{{ value }}', $value)
                 ->addViolation();
         }
     }
